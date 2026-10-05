@@ -16,18 +16,28 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 // Database Connection
-mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/imarika')
-  .then(() => console.log('MongoDB Connected'))
-  .catch(err => console.error('MongoDB Connection Error:', err));
+const MONGODB_URI = process.env.MONGODB_URI;
 
-// User Schema (Removed idNumber)
+if (!MONGODB_URI) {
+  console.error("FATAL ERROR: MONGODB_URI is not defined in environment variables.");
+  process.exit(1);
+}
+
+mongoose.connect(MONGODB_URI)
+  .then(() => console.log('MongoDB Connected Successfully'))
+  .catch(err => {
+    console.error('MongoDB Connection Error:', err);
+    process.exit(1); // Stop the server if DB fails to connect
+  });
+
+// User Schema
 const userSchema = new mongoose.Schema({
-  firstName: { type: String },
+  firstName: { type: String, required: true },
   middleName: { type: String },
-  surname: { type: String },
-  username: { type: String, unique: true, sparse: true },
+  surname: { type: String, required: true },
+  username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  phoneNumber: { type: String },
+  phoneNumber: { type: String, required: true },
   password: { type: String }, 
   googleId: { type: String },
   githubId: { type: String },
@@ -111,30 +121,53 @@ app.use(passport.initialize());
 
 // --- AUTHENTICATION ROUTES ---
 
-// Local Registration (Removed idNumber from req.body and validation)
+// Local Registration
 app.post('/api/auth/register', async (req, res) => {
   try {
     const { firstName, middleName, surname, username, email, phoneNumber, password } = req.body;
     
+    // Basic validation
     if (!firstName || !surname || !username || !email || !phoneNumber || !password) {
       return res.status(400).json({ error: 'Please enter all required fields' });
     }
 
+    // Check for existing user
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
-    if (existingUser) return res.status(400).json({ error: 'Email or Username already exists' });
+    if (existingUser) {
+      return res.status(400).json({ error: 'Email or Username already exists' });
+    }
 
+    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
+    // Create user
     const newUser = await User.create({ 
       firstName, middleName, surname, username, email, phoneNumber, password: hashedPassword 
     });
     
     const token = generateToken(newUser);
     res.status(201).json({ token, user: { id: newUser._id, name: `${firstName} ${surname}`, email: newUser.email } });
+  
   } catch (err) {
+    // Log the EXACT error to Render logs
+    console.error("=== REGISTRATION ERROR ===");
     console.error(err);
-    res.status(500).json({ error: 'Server error during registration' });
+    console.error("==========================");
+
+    // Send specific error to frontend
+    if (err.code === 11000) {
+      // MongoDB duplicate key error
+      const field = Object.keys(err.keyPattern)[0];
+      return res.status(400).json({ error: `An account with that ${field} already exists.` });
+    }
+    
+    if (err.name === 'ValidationError') {
+      const messages = Object.values(err.errors).map(val => val.message);
+      return res.status(400).json({ error: messages.join(', ') });
+    }
+
+    res.status(500).json({ error: `Server Error: ${err.message}` });
   }
 });
 
@@ -155,6 +188,7 @@ app.post('/api/auth/login', async (req, res) => {
     const token = generateToken(user);
     res.json({ token, user: { id: user._id, name: `${user.firstName} ${user.surname}`, email: user.email } });
   } catch (err) {
+    console.error("Login Error:", err);
     res.status(500).json({ error: 'Server error during login' });
   }
 });
