@@ -10,7 +10,6 @@ const path = require('path');
 const app = express();
 app.use(express.json());
 app.use(cors());
-app.use(express.static(path.join(__dirname, 'public')));
 
 // MongoDB Connection
 mongoose.connect(process.env.MONGO_URI)
@@ -73,17 +72,14 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { username, email, phone, password } = req.body;
     
-    // Check if user exists
     const existingUser = await User.findOne({ $or: [{ email }, { phone }] });
     if (existingUser) return res.status(400).json({ error: 'User already exists' });
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({ username, email, phone, password: hashedPassword });
     
-    // Create JWT
     const token = jwt.sign({ id: newUser._id }, process.env.JWT_SECRET, { expiresIn: '1d' });
     
     res.status(201).json({ token, user: { id: newUser._id, username: newUser.username, email: newUser.email, phone: newUser.phone, limit: newUser.limit, walletBalance: newUser.walletBalance } });
@@ -143,21 +139,106 @@ app.post('/api/loan/apply', authenticateToken, async (req, res) => {
   }
 });
 
+// --- PAYHERO STK PUSH INTEGRATION ---
 app.post('/api/payhero/stk-push', authenticateToken, async (req, res) => {
   const { phone, amount, loanId } = req.body;
+
+  if (!phone || !amount || !loanId) {
+    return res.status(400).json({ error: 'Missing required fields: phone, amount, loanId' });
+  }
+
   try {
-    // Mock Payhero logic
-    res.json({ success: true, message: 'STK Push sent to user phone' });
+    // Payhero API Endpoint for STK Push
+    const url = 'https://backend.payhero.co.ke/api/v2/payments/initiate-stk-push';
+
+    // The auth token should be in the format "Basic base64_encoded_token"
+    // It is stored securely in your .env file
+    const authToken = process.env.PAYHERO_AUTH_TOKEN;
+
+    const payload = {
+      amount: amount, // Amount in KES (e.g., 1500)
+      phone_number: phone, // Format: 254712345678
+      channel_id: process.env.PAYHERO_CHANNEL_ID, // Your registered channel ID
+      provider: 'm-pesa',
+      external_reference: `LOAN_FEE_${loanId}`, // Unique reference for this payment
+      callback_url: process.env.PAYHERO_CALLBACK_URL // Your Render URL + /api/payhero/callback
+    };
+
+    const response = await axios.post(url, payload, {
+      headers: {
+        'Authorization': authToken,
+        'Content-Type': 'application/json'
+      }
+    });
+
+    console.log('Payhero STK Push Response:', response.data);
+
+    res.json({ 
+      success: true, 
+      message: 'STK Push sent to user phone', 
+      reference: response.data.transaction_reference || `LOAN_FEE_${loanId}`,
+      payheroResponse: response.data
+    });
+
   } catch (error) {
-    res.status(500).json({ error: 'Failed to initiate payment' });
+    console.error('Payhero Error:', error.response?.data || error.message);
+    res.status(500).json({ 
+      error: 'Failed to initiate payment', 
+      details: error.response?.data || error.message 
+    });
   }
 });
 
+// --- PAYHERO CALLBACK ---
 app.post('/api/payhero/callback', async (req, res) => {
-  // Callback logic remains the same
-  res.status(200).json({ received: true });
+  console.log('Payhero Callback Received:', req.body);
+
+  // Payhero sends the callback data here. The exact structure depends on their API.
+  // Typically, you look for 'status' and 'external_reference'
+  const { external_reference, status, amount, transaction_id } = req.body;
+
+  try {
+    // Check if the payment was successful
+    // Note: Payhero's callback format may vary. Check their docs for the exact field names.
+    if (status === 'Success' || status === 'success' || req.body.success === true) {
+      
+      // Extract loanId from external_reference (e.g., "LOAN_FEE_65a1b2c3d4e5f6")
+      const loanId = external_reference ? external_reference.split('_')[2] : null;
+      
+      if (loanId) {
+        // Update Loan Status to 'active'
+        await Loan.findByIdAndUpdate(loanId, { status: 'active' });
+
+        // Record the transaction
+        const loan = await Loan.findById(loanId);
+        if (loan) {
+          await Transaction.create({
+            userId: loan.userId,
+            type: 'upfront_fee',
+            amount: amount || loan.upfrontFee,
+            status: 'success',
+            reference: transaction_id || external_reference
+          });
+
+          // Disburse the loan amount to the user's wallet
+          await User.findByIdAndUpdate(loan.userId, { $inc: { walletBalance: loan.amount } });
+          
+          console.log('Payment successful, loan activated:', loanId);
+        }
+      }
+    } else {
+      console.log('Payment failed for ref:', external_reference);
+    }
+
+    // Always respond with 200 to acknowledge receipt
+    res.status(200).json({ received: true });
+  } catch (error) {
+    console.error('Callback Error:', error);
+    res.status(500).json({ error: 'Callback processing failed' });
+  }
 });
 
+// Catch-all route to serve the frontend (for Render deployment)
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
