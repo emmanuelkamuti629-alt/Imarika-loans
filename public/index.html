@@ -42,8 +42,15 @@
       <!-- Auth Forms Container -->
       <div class="flex-1 bg-white px-6 pt-4 pb-8">
         
-        <!-- LOGIN FORM -->
+        <!-- ================= LOGIN FORM ================= -->
         <div id="login-form" class="block">
+          
+          <!-- Toggle Switch (Added to Login) -->
+          <div class="flex bg-gray-100 rounded-full p-1 mb-6">
+            <button onclick="showSignup()" class="flex-1 py-2 text-xs font-bold rounded-full text-gray-500">SignUp</button>
+            <button onclick="showLogin()" class="flex-1 py-2 text-xs font-bold rounded-full bg-[#0B2E20] text-white">Login</button>
+          </div>
+
           <h2 class="text-2xl font-bold text-gray-800 mb-1">Welcome Back</h2>
           <p class="text-xs text-gray-500 mb-6">Log in to your Imarika Loans account to access your loans and wallet.</p>
 
@@ -55,7 +62,8 @@
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400">🔒</span>
               <input type="password" id="login-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
-              <span class="absolute right-3 top-3 text-gray-400 cursor-pointer" onclick="togglePassword('login-password')">👁️</span>
+              <!-- Eye Icon Toggle -->
+              <span id="login-eye" class="absolute right-3 top-3 text-gray-400 cursor-pointer text-lg" onclick="togglePassword('login-password', 'login-eye')">👁️</span>
             </div>
           </div>
 
@@ -92,8 +100,9 @@
           </div>
         </div>
 
-        <!-- SIGNUP FORM -->
+        <!-- ================= SIGNUP FORM ================= -->
         <div id="signup-form" class="hidden">
+          
           <!-- Toggle Switch -->
           <div class="flex bg-gray-100 rounded-full p-1 mb-6">
             <button onclick="showSignup()" class="flex-1 py-2 text-xs font-bold rounded-full bg-[#0B2E20] text-white">SignUp</button>
@@ -119,12 +128,12 @@
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400 text-xs">🔒</span>
               <input type="password" id="signup-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
-              <span class="absolute right-3 top-3 text-gray-400 cursor-pointer" onclick="togglePassword('signup-password')">👁️</span>
+              <span id="signup-eye" class="absolute right-3 top-3 text-gray-400 cursor-pointer text-lg" onclick="togglePassword('signup-password', 'signup-eye')">👁️</span>
             </div>
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400 text-xs">👥</span>
               <input type="password" id="signup-confirm" placeholder="Confirm password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
-              <span class="absolute right-3 top-3 text-gray-400 cursor-pointer" onclick="togglePassword('signup-confirm')">👁️</span>
+              <span id="confirm-eye" class="absolute right-3 top-3 text-gray-400 cursor-pointer text-lg" onclick="togglePassword('signup-confirm', 'confirm-eye')">👁️</span>
             </div>
           </div>
 
@@ -217,9 +226,18 @@
       document.getElementById('login-form').classList.remove('hidden');
     }
 
-    function togglePassword(id) {
-      const input = document.getElementById(id);
-      input.type = input.type === 'password' ? 'text' : 'password';
+    // --- FIXED: Password Toggle Logic ---
+    function togglePassword(inputId, iconId) {
+      const input = document.getElementById(inputId);
+      const icon = document.getElementById(iconId);
+      
+      if (input.type === 'password') {
+        input.type = 'text';
+        icon.innerText = '🙈'; // Change to closed-eye emoji when visible
+      } else {
+        input.type = 'password';
+        icon.innerText = '👁️'; // Change back to open-eye emoji when hidden
+      }
     }
 
     // --- Mock Auth Logic (Replace with actual API calls in production) ---
@@ -560,4 +578,4 @@
     showLogin();
   </script>
 </body>
-  </html>
+              </html>
