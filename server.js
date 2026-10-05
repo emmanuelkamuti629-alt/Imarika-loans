@@ -35,13 +35,13 @@ const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   middleName: { type: String },
   surname: { type: String, required: true },
-  username: { type: String, required: true, unique: true }, // Unique
-  email: { type: String, required: true, unique: true },    // Unique
-  phoneNumber: { type: String, required: true },            // NOT unique
+  username: { type: String, required: true, unique: true }, // Must be unique
+  email: { type: String, required: true, unique: true },    // Must be unique
+  phoneNumber: { type: String, required: true, index: false }, // Explicitly NOT unique
   password: { type: String }, 
   googleId: { type: String },
   githubId: { type: String },
-  mpesaNumber: { type: String },                            // NOT unique
+  mpesaNumber: { type: String, index: false },              // Explicitly NOT unique
   loanLimit: { type: Number, default: 2000 },
   walletBalance: { type: Number, default: 0 },
   activeLoan: {
@@ -130,10 +130,10 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Please enter all required fields' });
     }
 
-    // Check for existing user by EMAIL or USERNAME only (Phone number is ignored here)
+    // Check for existing user by EMAIL or USERNAME only
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email or Username already exists. Please login.' });
+      return res.status(400).json({ error: 'Email or Username already exists. Please login or use a different one.' });
     }
 
     const salt = await bcrypt.genSalt(10);
@@ -150,9 +150,10 @@ app.post('/api/auth/register', async (req, res) => {
     console.error("=== REGISTRATION ERROR ===");
     console.error(err);
     
+    // If MongoDB still throws a duplicate error for email or username
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern)[0];
-      return res.status(400).json({ error: `An account with that ${field} already exists.` });
+      return res.status(400).json({ error: `An account with that ${field} already exists. Please login.` });
     }
     
     res.status(500).json({ error: `Server Error: ${err.message}` });
