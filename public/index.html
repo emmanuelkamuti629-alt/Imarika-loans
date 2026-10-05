@@ -8,53 +8,186 @@
   <style>
     .tab-active { color: #10b981; }
     .tab-inactive { color: #6b7280; }
-    /* Hide scrollbar for Chrome, Safari and Opera */
     .no-scrollbar::-webkit-scrollbar { display: none; }
-    /* Hide scrollbar for IE, Edge and Firefox */
     .no-scrollbar { -ms-overflow-style: none; scrollbar-width: none; }
+    .auth-curve { border-bottom-left-radius: 50% 20px; border-bottom-right-radius: 50% 20px; }
   </style>
 </head>
 <body class="bg-gray-100 flex justify-center items-center min-h-screen">
 
   <!-- Mobile Mockup Container -->
-  <div class="w-full max-w-md h-[850px] bg-[#0B2E20] rounded-[35px] shadow-2xl overflow-hidden flex flex-col relative border-[8px] border-gray-800">
+  <div class="w-full max-w-md h-[850px] bg-white rounded-[35px] shadow-2xl overflow-hidden flex flex-col relative border-[8px] border-gray-800">
     
-    <!-- Top Status Bar -->
-    <div class="flex justify-between items-center px-6 pt-3 pb-2 text-white text-xs font-semibold">
-      <span>9:41</span>
-      <div class="flex gap-1.5 items-center">
-        <span>📶</span> <span>📶</span> <span>🔋</span>
+    <!-- ================= AUTH SCREEN ================= -->
+    <div id="auth-screen" class="absolute inset-0 z-50 flex flex-col overflow-y-auto no-scrollbar">
+      
+      <!-- Green Curved Header -->
+      <div class="bg-[#0B2E20] text-white pt-12 pb-16 px-6 text-center auth-curve relative">
+        <div class="flex flex-col items-center">
+          <!-- Logo SVG -->
+          <svg class="w-16 h-16 mb-2" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M20 80 L40 60 L60 70 L80 30" stroke="#10b981" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M70 30 L80 30 L80 40" stroke="#10b981" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="15" y="75" width="12" height="15" fill="#10b981" rx="2"/>
+            <rect x="35" y="55" width="12" height="35" fill="#10b981" rx="2"/>
+            <rect x="55" y="65" width="12" height="25" fill="#10b981" rx="2"/>
+            <rect x="75" y="25" width="12" height="65" fill="#10b981" rx="2"/>
+          </svg>
+          <h1 class="text-3xl font-bold tracking-tight">Imarika Loans</h1>
+          <p class="text-sm text-gray-300 mt-1">Fast • Safe • Reliable</p>
+          <p class="text-xs text-gray-400 mt-2">Your financial growth is our priority</p>
+        </div>
+      </div>
+
+      <!-- Auth Forms Container -->
+      <div class="flex-1 bg-white px-6 pt-4 pb-8">
+        
+        <!-- LOGIN FORM -->
+        <div id="login-form" class="block">
+          <h2 class="text-2xl font-bold text-gray-800 mb-1">Welcome Back</h2>
+          <p class="text-xs text-gray-500 mb-6">Log in to your Imarika Loans account to access your loans and wallet.</p>
+
+          <div class="space-y-4">
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400">✉️</span>
+              <input type="email" id="login-email" placeholder="Enter your email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400">🔒</span>
+              <input type="password" id="login-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+              <span class="absolute right-3 top-3 text-gray-400 cursor-pointer" onclick="togglePassword('login-password')">👁️</span>
+            </div>
+          </div>
+
+          <div class="flex justify-between items-center mt-4 mb-6">
+            <label class="flex items-center text-xs text-gray-600">
+              <input type="checkbox" class="mr-2 accent-[#10b981]"> Remember me
+            </label>
+            <a href="#" class="text-xs text-[#10b981] font-semibold">Forgot password?</a>
+          </div>
+
+          <button onclick="handleLogin()" class="w-full bg-[#0B2E20] text-white font-bold py-3 rounded-xl text-sm mb-4">Log In</button>
+
+          <div class="flex items-center gap-3 mb-4">
+            <div class="flex-1 h-px bg-gray-300"></div>
+            <span class="text-xs text-gray-400">OR</span>
+            <div class="flex-1 h-px bg-gray-300"></div>
+          </div>
+
+          <div class="space-y-3 mb-6">
+            <button class="w-full border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"> Login with Google
+            </button>
+            <button class="w-full border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+              <img src="https://www.svgrepo.com/show/512317/github-142.svg" class="w-5 h-5" alt="GitHub"> Login with GitHub
+            </button>
+          </div>
+
+          <p class="text-center text-xs text-gray-500">
+            Don't have an account? <span onclick="showSignup()" class="text-[#10b981] font-semibold cursor-pointer">Sign Up</span>
+          </p>
+
+          <div class="text-center mt-8 text-[10px] text-gray-400 flex items-center justify-center gap-1">
+            🔒 Your data is safe and secure
+          </div>
+        </div>
+
+        <!-- SIGNUP FORM -->
+        <div id="signup-form" class="hidden">
+          <!-- Toggle Switch -->
+          <div class="flex bg-gray-100 rounded-full p-1 mb-6">
+            <button onclick="showSignup()" class="flex-1 py-2 text-xs font-bold rounded-full bg-[#0B2E20] text-white">SignUp</button>
+            <button onclick="showLogin()" class="flex-1 py-2 text-xs font-bold rounded-full text-gray-500">Login</button>
+          </div>
+
+          <h2 class="text-2xl font-bold text-gray-800 mb-1">Create Account</h2>
+          <p class="text-xs text-gray-500 mb-6">Sign up to create your Imarika Loans account to access your loans and wallet.</p>
+
+          <div class="space-y-3">
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400 text-xs">👤</span>
+              <input type="text" id="signup-username" placeholder="Enter username" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400 text-xs">✉️</span>
+              <input type="email" id="signup-email" placeholder="Enter your email" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400 text-xs">📱</span>
+              <input type="tel" id="signup-phone" placeholder="Enter mobile number" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400 text-xs">🔒</span>
+              <input type="password" id="signup-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+              <span class="absolute right-3 top-3 text-gray-400 cursor-pointer" onclick="togglePassword('signup-password')">👁️</span>
+            </div>
+            <div class="relative">
+              <span class="absolute left-3 top-3 text-gray-400 text-xs">👥</span>
+              <input type="password" id="signup-confirm" placeholder="Confirm password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+              <span class="absolute right-3 top-3 text-gray-400 cursor-pointer" onclick="togglePassword('signup-confirm')">👁️</span>
+            </div>
+          </div>
+
+          <button onclick="handleSignup()" class="w-full bg-[#0B2E20] text-white font-bold py-3 rounded-xl text-sm mt-6 mb-4">Sign Up</button>
+
+          <div class="space-y-3 mb-6">
+            <button class="w-full border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+              <img src="https://www.svgrepo.com/show/475656/google-color.svg" class="w-5 h-5" alt="Google"> Login with Google
+            </button>
+            <button class="w-full border border-gray-300 text-gray-700 font-semibold py-2.5 rounded-xl text-sm flex items-center justify-center gap-2">
+              <img src="https://www.svgrepo.com/show/512317/github-142.svg" class="w-5 h-5" alt="GitHub"> Login with GitHub
+            </button>
+          </div>
+
+          <p class="text-center text-xs text-gray-500">
+            Already have an account? <span onclick="showLogin()" class="text-[#10b981] font-semibold cursor-pointer">Log In</span>
+          </p>
+        </div>
+
       </div>
     </div>
 
-    <!-- Main Content Area -->
-    <div class="flex-1 overflow-y-auto no-scrollbar pb-20" id="app-content">
-      <!-- Dynamic content will be injected here -->
+    <!-- ================= MAIN APP (DASHBOARD) ================= -->
+    <div id="app-screen" class="absolute inset-0 z-40 hidden flex-col bg-[#0B2E20]">
+      
+      <!-- Top Status Bar -->
+      <div class="flex justify-between items-center px-6 pt-3 pb-2 text-white text-xs font-semibold">
+        <span>9:41</span>
+        <div class="flex gap-1.5 items-center">
+          <span>📶</span> <span>📶</span> <span>🔋</span>
+        </div>
+      </div>
+
+      <!-- Main Content Area -->
+      <div class="flex-1 overflow-y-auto no-scrollbar pb-20" id="app-content">
+        <!-- Dynamic content injected here -->
+      </div>
+
+      <!-- Bottom Navigation -->
+      <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center py-3 px-2 text-xs z-50">
+        <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 tab-active">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
+          <span>Home</span>
+        </button>
+        <button onclick="switchTab('loans')" id="nav-loans" class="flex flex-col items-center gap-1 tab-inactive">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+          <span>Loans</span>
+        </button>
+        <button onclick="switchTab('wallet')" id="nav-wallet" class="flex flex-col items-center gap-1 tab-inactive">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
+          <span>Wallet</span>
+        </button>
+        <button onclick="switchTab('transactions')" id="nav-transactions" class="flex flex-col items-center gap-1 tab-inactive">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
+          <span>History</span>
+        </button>
+        <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-1 tab-inactive">
+          <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
+          <span>Profile</span>
+        </button>
+      </div>
     </div>
 
-    <!-- Bottom Navigation -->
-    <div class="absolute bottom-0 w-full bg-white border-t border-gray-200 flex justify-around items-center py-3 px-2 text-xs z-50">
-      <button onclick="switchTab('home')" id="nav-home" class="flex flex-col items-center gap-1 tab-active">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 12l2-2m0 0l7-7 7 7M5 10v10a1 1 0 001 1h3m10-11l2 2m-2-2v10a1 1 0 01-1 1h-3m-6 0a1 1 0 001-1v-4a1 1 0 011-1h2a1 1 0 011 1v4a1 1 0 001 1m-6 0h6"></path></svg>
-        <span>Home</span>
-      </button>
-      <button onclick="switchTab('loans')" id="nav-loans" class="flex flex-col items-center gap-1 tab-inactive">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
-        <span>Loans</span>
-      </button>
-      <button onclick="switchTab('wallet')" id="nav-wallet" class="flex flex-col items-center gap-1 tab-inactive">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path></svg>
-        <span>Wallet</span>
-      </button>
-      <button onclick="switchTab('transactions')" id="nav-transactions" class="flex flex-col items-center gap-1 tab-inactive">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2"></path></svg>
-        <span>History</span>
-      </button>
-      <button onclick="switchTab('profile')" id="nav-profile" class="flex flex-col items-center gap-1 tab-inactive">
-        <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"></path></svg>
-        <span>Profile</span>
-      </button>
-    </div>
   </div>
 
   <script>
@@ -71,14 +204,71 @@
       loanForm: { amount: 5000, term: 30, purpose: 'Business' }
     };
 
-    // --- Format Currency ---
     const fmt = (num) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(num);
+
+    // --- Auth Navigation ---
+    function showSignup() {
+      document.getElementById('login-form').classList.add('hidden');
+      document.getElementById('signup-form').classList.remove('hidden');
+    }
+
+    function showLogin() {
+      document.getElementById('signup-form').classList.add('hidden');
+      document.getElementById('login-form').classList.remove('hidden');
+    }
+
+    function togglePassword(id) {
+      const input = document.getElementById(id);
+      input.type = input.type === 'password' ? 'text' : 'password';
+    }
+
+    // --- Mock Auth Logic (Replace with actual API calls in production) ---
+    function handleLogin() {
+      const email = document.getElementById('login-email').value;
+      const password = document.getElementById('login-password').value;
+
+      if (!email || !password) {
+        alert('Please enter email and password');
+        return;
+      }
+
+      // Simulate API Call
+      setTimeout(() => {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('flex');
+        render();
+      }, 500);
+    }
+
+    function handleSignup() {
+      const username = document.getElementById('signup-username').value;
+      const email = document.getElementById('signup-email').value;
+      const phone = document.getElementById('signup-phone').value;
+      const password = document.getElementById('signup-password').value;
+      const confirm = document.getElementById('signup-confirm').value;
+
+      if (!username || !email || !phone || !password || !confirm) {
+        alert('Please fill in all fields');
+        return;
+      }
+      if (password !== confirm) {
+        alert('Passwords do not match');
+        return;
+      }
+
+      // Simulate API Call
+      setTimeout(() => {
+        document.getElementById('auth-screen').classList.add('hidden');
+        document.getElementById('app-screen').classList.remove('hidden');
+        document.getElementById('app-screen').classList.add('flex');
+        render();
+      }, 500);
+    }
 
     // --- Tab Switching ---
     function switchTab(tab) {
       state.currentTab = tab;
-      
-      // Update Nav UI
       ['home', 'loans', 'wallet', 'transactions', 'profile'].forEach(t => {
         const btn = document.getElementById(`nav-${t}`);
         if (t === tab) {
@@ -89,14 +279,12 @@
           btn.classList.remove('tab-active');
         }
       });
-
       render();
     }
 
-    // --- Render Functions ---
+    // --- Render Functions (Dashboard) ---
     function render() {
       const content = document.getElementById('app-content');
-      
       if (state.currentTab === 'home') content.innerHTML = renderHome();
       if (state.currentTab === 'loans') content.innerHTML = renderLoans();
       if (state.currentTab === 'wallet') content.innerHTML = renderWallet();
@@ -115,14 +303,12 @@
             <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">🔔</div>
           </div>
 
-          <!-- Available Limit Card -->
           <div class="bg-[#1A4D33] rounded-2xl p-5 mb-5 border border-[#2A6D4A]">
             <p class="text-xs text-gray-300 mb-1">Available Loan Limit</p>
             <h1 class="text-3xl font-bold mb-4">${fmt(state.user.limit)}</h1>
             <button onclick="switchTab('loans')" class="bg-[#10b981] text-white text-sm font-semibold px-4 py-2 rounded-lg">Apply for Loan</button>
           </div>
 
-          <!-- Active Loan Summary -->
           ${state.activeLoan ? `
           <div class="bg-[#1A4D33] rounded-2xl p-4 mb-5 border border-[#2A6D4A]">
             <div class="flex justify-between text-xs text-gray-300 mb-2">
@@ -146,7 +332,6 @@
           </div>
           ` : ''}
 
-          <!-- Quick Actions -->
           <h3 class="text-sm font-semibold mb-3">Quick Actions</h3>
           <div class="grid grid-cols-3 gap-3 mb-6">
             <button onclick="switchTab('loans')" class="bg-[#1A4D33] p-3 rounded-xl flex flex-col items-center gap-2 border border-[#2A6D4A]">
@@ -163,7 +348,6 @@
             </button>
           </div>
 
-          <!-- Recent Transactions -->
           <div class="flex justify-between items-center mb-3">
             <h3 class="text-sm font-semibold">Recent Transactions</h3>
             <button onclick="switchTab('transactions')" class="text-xs text-[#10b981]">View all</button>
@@ -186,25 +370,21 @@
 
     function renderLoans() {
       const fee = state.loanForm.amount * 0.10;
-      const totalRepay = state.loanForm.amount * 1.08; // 8% interest
+      const totalRepay = state.loanForm.amount * 1.08;
 
       return `
         <div class="p-5 text-white">
           <h2 class="text-lg font-bold mb-4">Apply for Loan</h2>
-          
           <div class="bg-[#1A4D33] rounded-2xl p-5 mb-5 border border-[#2A6D4A]">
             <p class="text-xs text-gray-300 mb-2">How much do you need?</p>
             <h1 class="text-3xl font-bold mb-4">${fmt(state.loanForm.amount)}</h1>
-            
             <input type="range" min="1000" max="50000" step="1000" value="${state.loanForm.amount}" 
               oninput="updateLoanAmount(this.value)"
               class="w-full h-2 bg-[#0B2E20] rounded-lg appearance-none cursor-pointer accent-[#10b981] mb-6">
-            
             <div class="flex justify-between text-[10px] text-gray-400 mb-4">
               <span>Min: KES 1,000</span>
               <span>Max: KES 50,000</span>
             </div>
-
             <p class="text-xs text-gray-300 mb-2">Loan Term</p>
             <div class="grid grid-cols-3 gap-2 mb-6">
               ${[7, 14, 30].map(days => `
@@ -213,7 +393,6 @@
                 </button>
               `).join('')}
             </div>
-
             <div class="bg-[#0B2E20] rounded-xl p-3 mb-6 border border-[#2A6D4A]">
               <div class="flex justify-between text-xs mb-2">
                 <span class="text-gray-400">Upfront Fee (10%)</span>
@@ -228,14 +407,11 @@
                 <span class="font-bold text-[#10b981]">${fmt(totalRepay)}</span>
               </div>
             </div>
-
-            <!-- Transparency Warning -->
             <div class="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 mb-6">
               <p class="text-[10px] text-yellow-200 leading-relaxed">
                 ⚠️ <strong>Important:</strong> To activate this loan, you must pay a 10% upfront fee of <strong>${fmt(fee)}</strong> via M-Pesa. The loan amount will be disbursed to your wallet immediately after.
               </p>
             </div>
-
             <button onclick="applyLoan()" class="w-full bg-[#10b981] text-white font-bold py-3 rounded-xl text-sm">Continue to Payment</button>
           </div>
         </div>
@@ -254,7 +430,6 @@
               <button class="bg-white/20 px-4 py-2 rounded-lg text-xs font-semibold flex-1">Send</button>
             </div>
           </div>
-          
           <div class="bg-[#1A4D33] rounded-xl p-4 mb-5 border border-[#2A6D4A] flex justify-between items-center">
             <div>
               <p class="text-xs text-gray-300">Pending Balance</p>
@@ -262,7 +437,6 @@
             </div>
             <p class="text-[10px] text-gray-400 w-1/2 text-right">Funds awaiting clearance from M-Pesa</p>
           </div>
-
           <h3 class="text-sm font-semibold mb-3">Recent Activity</h3>
           ${state.transactions.map(t => `
             <div class="flex justify-between items-center py-3 border-b border-[#2A6D4A] last:border-0">
@@ -316,7 +490,6 @@
               <span class="text-[10px] bg-[#10b981]/20 text-[#10b981] px-2 py-0.5 rounded-full mt-1 inline-block">✅ Verified</span>
             </div>
           </div>
-
           <div class="space-y-4">
             <div class="bg-[#1A4D33] rounded-xl p-4 border border-[#2A6D4A] flex justify-between items-center">
               <div>
@@ -347,8 +520,7 @@
               <span class="text-gray-400">›</span>
             </div>
           </div>
-
-          <button class="w-full mt-6 border border-red-500/50 text-red-400 font-semibold py-3 rounded-xl text-sm">Logout</button>
+          <button onclick="logout()" class="w-full mt-6 border border-red-500/50 text-red-400 font-semibold py-3 rounded-xl text-sm">Logout</button>
         </div>
       `;
     }
@@ -366,39 +538,26 @@
 
     async function applyLoan() {
       const fee = state.loanForm.amount * 0.10;
-      
-      // Simulate API Call to Backend
       const btn = event.target;
       btn.innerText = 'Processing...';
       btn.disabled = true;
-
-      try {
-        // 1. Create Loan in DB
-        // const res = await fetch('/api/loan/apply', {
-        //   method: 'POST',
-        //   headers: { 'Content-Type': 'application/json' },
-        //   body: JSON.stringify({ userId: 'mock_user_id', amount: state.loanForm.amount, termDays: state.loanForm.term })
-        // });
-        
-        // 2. Trigger Payhero STK Push
-        // await fetch('/api/payhero/stk-push', { ... })
-
-        // Mock Success Flow
-        setTimeout(() => {
-          alert(`Loan Application Received!\n\nA Payhero STK Push for ${fmt(fee)} (10% upfront fee) has been sent to your phone. Please enter your M-Pesa PIN to activate the loan.`);
-          btn.innerText = 'Continue to Payment';
-          btn.disabled = false;
-        }, 1500);
-
-      } catch (error) {
-        alert('Error applying for loan');
+      
+      setTimeout(() => {
+        alert(`Loan Application Received!\n\nA Payhero STK Push for ${fmt(fee)} (10% upfront fee) has been sent to your phone. Please enter your M-Pesa PIN to activate the loan.`);
         btn.innerText = 'Continue to Payment';
         btn.disabled = false;
-      }
+      }, 1500);
     }
 
-    // Initial Render
-    render();
+    function logout() {
+      document.getElementById('app-screen').classList.add('hidden');
+      document.getElementById('app-screen').classList.remove('flex');
+      document.getElementById('auth-screen').classList.remove('hidden');
+      showLogin();
+    }
+
+    // Initialize with Login screen visible
+    showLogin();
   </script>
 </body>
-                                                                                     </html>
+</html>
