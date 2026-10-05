@@ -1,7 +1,7 @@
 {
   "name": "imarika-loans",
   "version": "1.0.0",
-  "description": "Fast, Safe, Reliable digital lending platform for the Kenyan market",
+  "description": "Fast, Safe, Reliable digital lending platform",
   "main": "server.js",
   "scripts": {
     "start": "node server.js"
