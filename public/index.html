@@ -24,7 +24,6 @@
       <!-- Green Curved Header -->
       <div class="bg-[#0B2E20] text-white pt-12 pb-16 px-6 text-center auth-curve relative">
         <div class="flex flex-col items-center">
-          <!-- Logo SVG -->
           <svg class="w-16 h-16 mb-2" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M20 80 L40 60 L60 70 L80 30" stroke="#10b981" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
             <path d="M70 30 L80 30 L80 40" stroke="#10b981" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
@@ -44,8 +43,6 @@
         
         <!-- ================= LOGIN FORM ================= -->
         <div id="login-form" class="block">
-          
-          <!-- Toggle Switch (Added to Login) -->
           <div class="flex bg-gray-100 rounded-full p-1 mb-6">
             <button onclick="showSignup()" class="flex-1 py-2 text-xs font-bold rounded-full text-gray-500">SignUp</button>
             <button onclick="showLogin()" class="flex-1 py-2 text-xs font-bold rounded-full bg-[#0B2E20] text-white">Login</button>
@@ -62,7 +59,6 @@
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400">🔒</span>
               <input type="password" id="login-password" placeholder="Password" class="w-full pl-10 pr-10 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
-              <!-- Eye Icon Toggle -->
               <span id="login-eye" class="absolute right-3 top-3 text-gray-400 cursor-pointer text-lg" onclick="togglePassword('login-password', 'login-eye')">👁️</span>
             </div>
           </div>
@@ -94,16 +90,10 @@
           <p class="text-center text-xs text-gray-500">
             Don't have an account? <span onclick="showSignup()" class="text-[#10b981] font-semibold cursor-pointer">Sign Up</span>
           </p>
-
-          <div class="text-center mt-8 text-[10px] text-gray-400 flex items-center justify-center gap-1">
-            🔒 Your data is safe and secure
-          </div>
         </div>
 
         <!-- ================= SIGNUP FORM ================= -->
         <div id="signup-form" class="hidden">
-          
-          <!-- Toggle Switch -->
           <div class="flex bg-gray-100 rounded-full p-1 mb-6">
             <button onclick="showSignup()" class="flex-1 py-2 text-xs font-bold rounded-full bg-[#0B2E20] text-white">SignUp</button>
             <button onclick="showLogin()" class="flex-1 py-2 text-xs font-bold rounded-full text-gray-500">Login</button>
@@ -123,7 +113,7 @@
             </div>
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400 text-xs">📱</span>
-              <input type="tel" id="signup-phone" placeholder="Enter mobile number" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+              <input type="tel" id="signup-phone" placeholder="Enter mobile number (2547...)" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
             </div>
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400 text-xs">🔒</span>
@@ -159,7 +149,6 @@
     <!-- ================= MAIN APP (DASHBOARD) ================= -->
     <div id="app-screen" class="absolute inset-0 z-40 hidden flex-col bg-[#0B2E20]">
       
-      <!-- Top Status Bar -->
       <div class="flex justify-between items-center px-6 pt-3 pb-2 text-white text-xs font-semibold">
         <span>9:41</span>
         <div class="flex gap-1.5 items-center">
@@ -167,9 +156,8 @@
         </div>
       </div>
 
-      <!-- Main Content Area -->
       <div class="flex-1 overflow-y-auto no-scrollbar pb-20" id="app-content">
-        <!-- Dynamic content injected here -->
+        <!-- Dynamic content -->
       </div>
 
       <!-- Bottom Navigation -->
@@ -201,16 +189,23 @@
 
   <script>
     // --- State Management ---
+    // Completely reset state. No simulated data.
     let state = {
       currentTab: 'home',
-      user: { name: 'Emmanuel', limit: 50000, walletBalance: 12350 },
-      activeLoan: { amount: 20000, repaid: 8000, dueDate: '12 Nov 2026', nextPayment: 2500, status: 'Active' },
-      transactions: [
-        { id: 1, type: 'Loan Disbursed', amount: 20000, date: '10 Oct 2026', status: 'Success', icon: '📥' },
-        { id: 2, type: 'Repayment', amount: -2500, date: '08 Oct 2026', status: 'Success', icon: '📤' },
-        { id: 3, type: 'Wallet Top Up', amount: 5000, date: '05 Oct 2026', status: 'Success', icon: '💳' }
-      ],
-      loanForm: { amount: 5000, term: 30, purpose: 'Business' }
+      user: { 
+        username: 'User', 
+        phone: '', 
+        limit: 2000, // Default limit for new users as requested
+        walletBalance: 0 
+      },
+      activeLoan: null, // No active loan by default
+      transactions: [], // No transactions by default
+      loanForm: { 
+        amount: 2000, 
+        term: 30, 
+        purpose: 'Business',
+        paymentPhone: '' // Will be populated with user.phone on login
+      }
     };
 
     const fmt = (num) => new Intl.NumberFormat('en-KE', { style: 'currency', currency: 'KES' }).format(num);
@@ -226,21 +221,21 @@
       document.getElementById('login-form').classList.remove('hidden');
     }
 
-    // --- FIXED: Password Toggle Logic ---
+    // --- Password Toggle Logic ---
     function togglePassword(inputId, iconId) {
       const input = document.getElementById(inputId);
       const icon = document.getElementById(iconId);
       
       if (input.type === 'password') {
         input.type = 'text';
-        icon.innerText = '🙈'; // Change to closed-eye emoji when visible
+        icon.innerText = '🙈';
       } else {
         input.type = 'password';
-        icon.innerText = '👁️'; // Change back to open-eye emoji when hidden
+        icon.innerText = '👁️';
       }
     }
 
-    // --- Mock Auth Logic (Replace with actual API calls in production) ---
+    // --- Auth Logic ---
     function handleLogin() {
       const email = document.getElementById('login-email').value;
       const password = document.getElementById('login-password').value;
@@ -250,8 +245,22 @@
         return;
       }
 
-      // Simulate API Call
+      // In a real app, you would fetch the user data from the backend here.
+      // For this demo, we simulate a successful login and set user data.
       setTimeout(() => {
+        // Mocking the retrieval of user data
+        state.user.username = email.split('@')[0]; // Use part of email as username
+        state.user.phone = '254712345678'; // Ideally, this comes from the DB
+        state.user.limit = 2000; // Default limit
+        state.user.walletBalance = 0;
+        
+        // Pre-fill payment phone with registered number
+        state.loanForm.paymentPhone = state.user.phone;
+        
+        // Clear any previous simulated data
+        state.activeLoan = null;
+        state.transactions = [];
+
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('flex');
@@ -275,8 +284,20 @@
         return;
       }
 
-      // Simulate API Call
+      // In a real app, you would POST this data to your backend /api/auth/register
       setTimeout(() => {
+        // Set state based on the new user's details
+        state.user.username = username;
+        state.user.phone = phone; // Store the registered phone number
+        state.user.limit = 2000; // Default limit for new users
+        state.user.walletBalance = 0;
+        
+        // Pre-fill payment phone with registered number
+        state.loanForm.paymentPhone = phone;
+        
+        state.activeLoan = null;
+        state.transactions = [];
+
         document.getElementById('auth-screen').classList.add('hidden');
         document.getElementById('app-screen').classList.remove('hidden');
         document.getElementById('app-screen').classList.add('flex');
@@ -300,7 +321,7 @@
       render();
     }
 
-    // --- Render Functions (Dashboard) ---
+    // --- Render Functions ---
     function render() {
       const content = document.getElementById('app-content');
       if (state.currentTab === 'home') content.innerHTML = renderHome();
@@ -311,22 +332,27 @@
     }
 
     function renderHome() {
+      // Dynamic greeting using actual username
+      const greeting = `Hello, ${state.user.username}`;
+      
       return `
         <div class="p-5 text-white">
           <div class="flex justify-between items-center mb-6">
             <div>
-              <p class="text-sm text-gray-300">Hello, ${state.user.name}</p>
+              <p class="text-sm text-gray-300">${greeting}</p>
               <p class="text-xs text-gray-400">Here's your financial overview</p>
             </div>
             <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">🔔</div>
           </div>
 
+          <!-- Dynamic Loan Limit -->
           <div class="bg-[#1A4D33] rounded-2xl p-5 mb-5 border border-[#2A6D4A]">
             <p class="text-xs text-gray-300 mb-1">Available Loan Limit</p>
             <h1 class="text-3xl font-bold mb-4">${fmt(state.user.limit)}</h1>
             <button onclick="switchTab('loans')" class="bg-[#10b981] text-white text-sm font-semibold px-4 py-2 rounded-lg">Apply for Loan</button>
           </div>
 
+          <!-- Conditional Active Loan Rendering -->
           ${state.activeLoan ? `
           <div class="bg-[#1A4D33] rounded-2xl p-4 mb-5 border border-[#2A6D4A]">
             <div class="flex justify-between text-xs text-gray-300 mb-2">
@@ -348,7 +374,11 @@
             </div>
             <p class="text-xs text-gray-400 text-right">Due: ${state.activeLoan.dueDate}</p>
           </div>
-          ` : ''}
+          ` : `
+          <div class="bg-[#1A4D33] rounded-2xl p-4 mb-5 border border-[#2A6D4A] text-center">
+            <p class="text-xs text-gray-400">No active loan</p>
+          </div>
+          `}
 
           <h3 class="text-sm font-semibold mb-3">Quick Actions</h3>
           <div class="grid grid-cols-3 gap-3 mb-6">
@@ -370,7 +400,9 @@
             <h3 class="text-sm font-semibold">Recent Transactions</h3>
             <button onclick="switchTab('transactions')" class="text-xs text-[#10b981]">View all</button>
           </div>
-          ${state.transactions.slice(0,3).map(t => `
+          
+          <!-- Conditional Transactions Rendering -->
+          ${state.transactions.length > 0 ? state.transactions.slice(0,3).map(t => `
             <div class="flex justify-between items-center py-3 border-b border-[#2A6D4A] last:border-0">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-[#1A4D33] rounded-full flex items-center justify-center text-xs">${t.icon}</div>
@@ -381,7 +413,9 @@
               </div>
               <p class="text-xs font-semibold ${t.amount > 0 ? 'text-[#10b981]' : 'text-red-400'}">${t.amount > 0 ? '+' : ''}${fmt(t.amount)}</p>
             </div>
-          `).join('')}
+          `).join('') : `
+            <div class="text-center py-4 text-xs text-gray-500">No recent transactions</div>
+          `}
         </div>
       `;
     }
@@ -425,6 +459,18 @@
                 <span class="font-bold text-[#10b981]">${fmt(totalRepay)}</span>
               </div>
             </div>
+            
+            <!-- M-Pesa Payment Number Input -->
+            <div class="mb-6">
+              <p class="text-xs text-gray-300 mb-2">M-Pesa Payment Number</p>
+              <input type="tel" id="payment-phone" 
+                value="${state.loanForm.paymentPhone}" 
+                oninput="updatePaymentPhone(this.value)"
+                class="w-full px-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm bg-white text-gray-800" 
+                placeholder="2547...">
+              <p class="text-[10px] text-gray-400 mt-1">Defaults to your registered number. Edit if paying from a different number.</p>
+            </div>
+
             <div class="bg-yellow-900/30 border border-yellow-700/50 rounded-lg p-3 mb-6">
               <p class="text-[10px] text-yellow-200 leading-relaxed">
                 ⚠️ <strong>Important:</strong> To activate this loan, you must pay a 10% upfront fee of <strong>${fmt(fee)}</strong> via M-Pesa. The loan amount will be disbursed to your wallet immediately after.
@@ -456,7 +502,7 @@
             <p class="text-[10px] text-gray-400 w-1/2 text-right">Funds awaiting clearance from M-Pesa</p>
           </div>
           <h3 class="text-sm font-semibold mb-3">Recent Activity</h3>
-          ${state.transactions.map(t => `
+          ${state.transactions.length > 0 ? state.transactions.map(t => `
             <div class="flex justify-between items-center py-3 border-b border-[#2A6D4A] last:border-0">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-[#1A4D33] rounded-full flex items-center justify-center text-xs">${t.icon}</div>
@@ -467,7 +513,7 @@
               </div>
               <p class="text-xs font-semibold ${t.amount > 0 ? 'text-[#10b981]' : 'text-red-400'}">${t.amount > 0 ? '+' : ''}${fmt(t.amount)}</p>
             </div>
-          `).join('')}
+          `).join('') : `<div class="text-center py-4 text-xs text-gray-500">No activity yet</div>`}
         </div>
       `;
     }
@@ -481,7 +527,7 @@
             <button class="bg-[#1A4D33] text-gray-300 text-xs px-3 py-1 rounded-full border border-[#2A6D4A]">Loans</button>
             <button class="bg-[#1A4D33] text-gray-300 text-xs px-3 py-1 rounded-full border border-[#2A6D4A]">Payments</button>
           </div>
-          ${state.transactions.map(t => `
+          ${state.transactions.length > 0 ? state.transactions.map(t => `
             <div class="flex justify-between items-center py-3 border-b border-[#2A6D4A] last:border-0">
               <div class="flex items-center gap-3">
                 <div class="w-8 h-8 bg-[#1A4D33] rounded-full flex items-center justify-center text-xs">${t.icon}</div>
@@ -492,7 +538,7 @@
               </div>
               <p class="text-xs font-semibold ${t.amount > 0 ? 'text-[#10b981]' : 'text-red-400'}">${t.amount > 0 ? '+' : ''}${fmt(t.amount)}</p>
             </div>
-          `).join('')}
+          `).join('') : `<div class="text-center py-4 text-xs text-gray-500">No transactions found</div>`}
         </div>
       `;
     }
@@ -503,8 +549,8 @@
           <div class="flex items-center gap-4 mb-6">
             <div class="w-16 h-16 bg-[#1A4D33] rounded-full flex items-center justify-center text-2xl border-2 border-[#10b981]">👤</div>
             <div>
-              <h2 class="text-lg font-bold">${state.user.name} Kamuti</h2>
-              <p class="text-xs text-gray-400">+254 712 345 678</p>
+              <h2 class="text-lg font-bold">${state.user.username}</h2>
+              <p class="text-xs text-gray-400">${state.user.phone || 'No phone set'}</p>
               <span class="text-[10px] bg-[#10b981]/20 text-[#10b981] px-2 py-0.5 rounded-full mt-1 inline-block">✅ Verified</span>
             </div>
           </div>
@@ -554,20 +600,45 @@
       render();
     }
 
+    // New handler to update the payment phone number in state
+    function updatePaymentPhone(val) {
+      state.loanForm.paymentPhone = val;
+    }
+
     async function applyLoan() {
       const fee = state.loanForm.amount * 0.10;
+      const paymentPhone = state.loanForm.paymentPhone;
+
+      if (!paymentPhone) {
+        alert('Please enter an M-Pesa payment number.');
+        return;
+      }
+
       const btn = event.target;
       btn.innerText = 'Processing...';
       btn.disabled = true;
       
+      // Simulate API call to backend
       setTimeout(() => {
-        alert(`Loan Application Received!\n\nA Payhero STK Push for ${fmt(fee)} (10% upfront fee) has been sent to your phone. Please enter your M-Pesa PIN to activate the loan.`);
+        alert(`Loan Application Received!\n\nA Payhero STK Push for ${fmt(fee)} (10% upfront fee) has been sent to ${paymentPhone}.\n\nPlease enter your M-Pesa PIN to activate the loan.`);
+        
+        // After successful payment in a real app, you would update state.activeLoan and add a transaction.
+        // For now, we just reset the button.
         btn.innerText = 'Continue to Payment';
         btn.disabled = false;
       }, 1500);
     }
 
     function logout() {
+      // Reset state completely on logout
+      state = {
+        currentTab: 'home',
+        user: { username: 'User', phone: '', limit: 2000, walletBalance: 0 },
+        activeLoan: null,
+        transactions: [],
+        loanForm: { amount: 2000, term: 30, purpose: 'Business', paymentPhone: '' }
+      };
+      
       document.getElementById('app-screen').classList.add('hidden');
       document.getElementById('app-screen').classList.remove('flex');
       document.getElementById('auth-screen').classList.remove('hidden');
@@ -578,4 +649,4 @@
     showLogin();
   </script>
 </body>
-              </html>
+</html>
