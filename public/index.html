@@ -18,15 +18,14 @@
         #authView::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 4px; }
     </style>
 </head>
-<!-- Changed to md:items-center to prevent mobile centering issues -->
 <body class="flex justify-center w-full bg-gray-100 p-0 md:p-4 md:items-center">
 
-    <!-- Main Container: h-screen on mobile, auto on desktop -->
+    <!-- Main Container -->
     <div class="w-full max-w-md bg-white md:rounded-3xl shadow-2xl overflow-hidden relative h-screen md:h-auto md:min-h-[700px] flex flex-col">
         
         <!-- ================= AUTH VIEW ================= -->
         <div id="authView" class="flex-1 flex flex-col overflow-y-auto">
-            <!-- Header Section: Added pt-12 to ensure top is not cut off -->
+            <!-- Header Section -->
             <div class="bg-dark-green curved-header pt-12 pb-14 px-6 text-center text-white relative shrink-0">
                 <!-- Imarika Growing Graph Logo -->
                 <div class="flex justify-center mb-2">
@@ -83,10 +82,7 @@
                             <input type="tel" id="phoneNumber" placeholder="Enter mobile number" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
                         </div>
 
-                        <div class="relative">
-                            <span class="input-icon"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 6H5a2 2 0 00-2 2v9a2 2 0 002 2h14a2 2 0 002-2V8a2 2 0 00-2-2h-5m-4 0V5a2 2 0 114 0v1m-4 0a2 2 0 104 0m-5 8a2 2 0 100-4 2 2 0 000 4zm0 0c1.306 0 2.418.835 2.83 2M9 14a3.001 3.001 0 00-2.83 2M15 11h3m-3 4h2"></path></svg></span>
-                            <input type="text" id="idNumber" placeholder="Enter ID number" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500 text-sm">
-                        </div>
+                        <!-- ID Number field removed here -->
 
                         <div class="relative">
                             <span class="input-icon"><svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path></svg></span>
@@ -158,7 +154,7 @@
             </div>
         </div>
 
-        <!-- ================= DASHBOARD VIEW (Hidden initially) ================= -->
+        <!-- ================= DASHBOARD VIEW ================= -->
         <div id="dashboardView" class="hidden p-6 bg-white h-full flex flex-col items-center justify-center">
             <div class="w-20 h-20 bg-emerald-100 rounded-full flex items-center justify-center mb-4">
                 <svg class="w-10 h-10 text-emerald-600" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 13l4 4L19 7"></path></svg>
@@ -190,7 +186,6 @@
 
     <!-- Frontend Logic -->
     <script>
-        // Check URL parameters for OAuth token redirect
         const urlParams = new URLSearchParams(window.location.search);
         const token = urlParams.get('token');
         const name = urlParams.get('name');
@@ -204,7 +199,6 @@
             showMessage('Authentication failed. Please try again.', 'error');
         }
 
-        // UI Elements
         const authView = document.getElementById('authView');
         const dashboardView = document.getElementById('dashboardView');
         const tabSignUp = document.getElementById('tabSignUp');
@@ -256,7 +250,6 @@
         tabLogin.addEventListener('click', () => { isLogin = true; updateUI(); });
         toggleLink.addEventListener('click', (e) => { e.preventDefault(); isLogin = !isLogin; updateUI(); });
 
-        // Show/Hide Password Functionality
         function togglePassword(inputId, iconId) {
             const passwordInput = document.getElementById(inputId);
             const eyeIcon = document.getElementById(iconId);
@@ -264,17 +257,14 @@
             if (passwordInput.type === 'password') {
                 passwordInput.type = 'text';
                 eyeIcon.classList.add('text-emerald-600');
-                // Eye open icon
                 eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"></path><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"></path>`;
             } else {
                 passwordInput.type = 'password';
                 eyeIcon.classList.remove('text-emerald-600');
-                // Eye closed icon
                 eyeIcon.innerHTML = `<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"></path>`;
             }
         }
 
-        // Handle Form Submission
         authForm.addEventListener('submit', async (e) => {
             e.preventDefault();
             
@@ -294,6 +284,7 @@
                     return showMessage('Passwords do not match!', 'error');
                 }
 
+                // Removed idNumber from payload
                 payload = {
                     firstName: document.getElementById('firstName').value,
                     middleName: document.getElementById('middleName').value,
@@ -301,7 +292,6 @@
                     username: document.getElementById('username').value,
                     email: document.getElementById('email').value,
                     phoneNumber: document.getElementById('phoneNumber').value,
-                    idNumber: document.getElementById('idNumber').value,
                     password: password
                 };
             }
@@ -333,7 +323,6 @@
             }
         });
 
-        // Dashboard UI Logic
         function showDashboard(userName) {
             authView.classList.add('hidden');
             dashboardView.classList.remove('hidden');
@@ -343,10 +332,9 @@
         function logout() {
             localStorage.removeItem('imarika_token');
             localStorage.removeItem('imarika_user');
-            window.location.href = '/'; // Reload the page
+            window.location.href = '/'; 
         }
 
-        // Helper to show messages
         function showMessage(msg, type) {
             messageBox.classList.remove('hidden', 'bg-red-100', 'text-red-700', 'bg-green-100', 'text-green-700');
             if (type === 'error') {
@@ -357,8 +345,7 @@
             messageBox.innerText = msg;
         }
 
-        // Initialize UI
         updateUI();
     </script>
 </body>
-    </html>
+</html>
