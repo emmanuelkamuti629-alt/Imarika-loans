@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/imarika')
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// User Schema
+// User Schema (Removed idNumber)
 const userSchema = new mongoose.Schema({
   firstName: { type: String },
   middleName: { type: String },
@@ -28,7 +28,6 @@ const userSchema = new mongoose.Schema({
   username: { type: String, unique: true, sparse: true },
   email: { type: String, required: true, unique: true },
   phoneNumber: { type: String },
-  idNumber: { type: String },
   password: { type: String }, 
   googleId: { type: String },
   githubId: { type: String },
@@ -112,12 +111,12 @@ app.use(passport.initialize());
 
 // --- AUTHENTICATION ROUTES ---
 
-// Local Registration
+// Local Registration (Removed idNumber from req.body and validation)
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { firstName, middleName, surname, username, email, phoneNumber, idNumber, password } = req.body;
+    const { firstName, middleName, surname, username, email, phoneNumber, password } = req.body;
     
-    if (!firstName || !surname || !username || !email || !phoneNumber || !idNumber || !password) {
+    if (!firstName || !surname || !username || !email || !phoneNumber || !password) {
       return res.status(400).json({ error: 'Please enter all required fields' });
     }
 
@@ -128,7 +127,7 @@ app.post('/api/auth/register', async (req, res) => {
     const hashedPassword = await bcrypt.hash(password, salt);
 
     const newUser = await User.create({ 
-      firstName, middleName, surname, username, email, phoneNumber, idNumber, password: hashedPassword 
+      firstName, middleName, surname, username, email, phoneNumber, password: hashedPassword 
     });
     
     const token = generateToken(newUser);
