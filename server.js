@@ -20,7 +20,7 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/imarika')
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// User Schema (phoneNumber and idNumber are optional initially for OAuth users)
+// User Schema
 const userSchema = new mongoose.Schema({
   firstName: { type: String },
   middleName: { type: String },
@@ -53,7 +53,6 @@ const generateToken = (user) => {
 };
 
 // --- PASSPORT CONFIGURATION ---
-
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'GOOGLE_CLIENT_ID',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'GOOGLE_CLIENT_SECRET',
@@ -63,7 +62,6 @@ passport.use(new GoogleStrategy({
     try {
       let user = await User.findOne({ email: profile.emails[0].value });
       if (!user) {
-        // Create new account via Google
         user = await User.create({
           firstName: profile.name.givenName || profile.displayName,
           surname: profile.name.familyName || '',
@@ -72,7 +70,6 @@ passport.use(new GoogleStrategy({
           googleId: profile.id
         });
       } else if (!user.googleId) {
-        // Link Google to existing account
         user.googleId = profile.id;
         await user.save();
       }
@@ -93,7 +90,6 @@ passport.use(new GitHubStrategy({
       const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : `${profile.username}@github.com`;
       let user = await User.findOne({ email });
       if (!user) {
-        // Create new account via GitHub
         user = await User.create({
           firstName: profile.displayName || profile.username,
           surname: '',
@@ -102,7 +98,6 @@ passport.use(new GitHubStrategy({
           githubId: profile.id
         });
       } else if (!user.githubId) {
-        // Link GitHub to existing account
         user.githubId = profile.id;
         await user.save();
       }
