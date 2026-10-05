@@ -20,17 +20,21 @@ mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/imarika')
   .then(() => console.log('MongoDB Connected'))
   .catch(err => console.error('MongoDB Connection Error:', err));
 
-// User Schema
+// User Schema (phoneNumber and idNumber are optional initially for OAuth users)
 const userSchema = new mongoose.Schema({
-  name: { type: String, required: true },
+  firstName: { type: String },
+  middleName: { type: String },
+  surname: { type: String },
+  username: { type: String, unique: true, sparse: true },
   email: { type: String, required: true, unique: true },
-  password: { type: String }, // Optional for OAuth users
+  phoneNumber: { type: String },
+  idNumber: { type: String },
+  password: { type: String }, 
   googleId: { type: String },
   githubId: { type: String },
   mpesaNumber: { type: String },
-  loanLimit: { type: Number, default: 2000 }, // New users start with KES 2,000
+  loanLimit: { type: Number, default: 2000 },
   walletBalance: { type: Number, default: 0 },
-  pendingBalance: { type: Number, default: 0 },
   activeLoan: {
     amount: Number,
     upfrontFee: Number,
@@ -50,7 +54,6 @@ const generateToken = (user) => {
 
 // --- PASSPORT CONFIGURATION ---
 
-// Google Strategy
 passport.use(new GoogleStrategy({
     clientID: process.env.GOOGLE_CLIENT_ID || 'GOOGLE_CLIENT_ID',
     clientSecret: process.env.GOOGLE_CLIENT_SECRET || 'GOOGLE_CLIENT_SECRET',
@@ -60,12 +63,16 @@ passport.use(new GoogleStrategy({
     try {
       let user = await User.findOne({ email: profile.emails[0].value });
       if (!user) {
+        // Create new account via Google
         user = await User.create({
-          name: profile.displayName,
+          firstName: profile.name.givenName || profile.displayName,
+          surname: profile.name.familyName || '',
           email: profile.emails[0].value,
+          username: profile.emails[0].value.split('@')[0] + Math.floor(Math.random() * 1000),
           googleId: profile.id
         });
       } else if (!user.googleId) {
+        // Link Google to existing account
         user.googleId = profile.id;
         await user.save();
       }
@@ -76,7 +83,6 @@ passport.use(new GoogleStrategy({
   }
 ));
 
-// GitHub Strategy
 passport.use(new GitHubStrategy({
     clientID: process.env.GITHUB_CLIENT_ID || 'GITHUB_CLIENT_ID',
     clientSecret: process.env.GITHUB_CLIENT_SECRET || 'GITHUB_CLIENT_SECRET',
@@ -87,12 +93,16 @@ passport.use(new GitHubStrategy({
       const email = profile.emails && profile.emails.length > 0 ? profile.emails[0].value : `${profile.username}@github.com`;
       let user = await User.findOne({ email });
       if (!user) {
+        // Create new account via GitHub
         user = await User.create({
-          name: profile.displayName || profile.username,
+          firstName: profile.displayName || profile.username,
+          surname: '',
           email: email,
+          username: profile.username,
           githubId: profile.id
         });
       } else if (!user.githubId) {
+        // Link GitHub to existing account
         user.githubId = profile.id;
         await user.save();
       }
@@ -107,108 +117,77 @@ app.use(passport.initialize());
 
 // --- AUTHENTICATION ROUTES ---
 
-// 1. Local Registration
+// Local Registration
 app.post('/api/auth/register', async (req, res) => {
   try {
-    const { name, email, password, mpesaNumber } = req.body;
-    if (!name || !email || !password) return res.status(400).json({ error: 'Please enter all required fields' });
+    const { firstName, middleName, surname, username, email, phoneNumber, idNumber, password } = req.body;
+    
+    if (!firstName || !surname || !username || !email || !phoneNumber || !idNumber || !password) {
+      return res.status(400).json({ error: 'Please enter all required fields' });
+    }
 
-    const existingUser = await User.findOne({ email });
-    if (existingUser) return res.status(400).json({ error: 'User already exists' });
+    const existingUser = await User.findOne({ $or: [{ email }, { username }] });
+    if (existingUser) return res.status(400).json({ error: 'Email or Username already exists' });
 
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    const newUser = await User.create({ name, email, password: hashedPassword, mpesaNumber });
+    const newUser = await User.create({ 
+      firstName, middleName, surname, username, email, phoneNumber, idNumber, password: hashedPassword 
+    });
+    
     const token = generateToken(newUser);
-
-    res.status(201).json({ token, user: { id: newUser._id, name: newUser.name, email: newUser.email } });
+    res.status(201).json({ token, user: { id: newUser._id, name: `${firstName} ${surname}`, email: newUser.email } });
   } catch (err) {
+    console.error(err);
     res.status(500).json({ error: 'Server error during registration' });
   }
 });
 
-// 2. Local Login
+// Local Login
 app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
     if (!user) return res.status(400).json({ error: 'Invalid credentials' });
 
+    if (!user.password) {
+      return res.status(400).json({ error: 'Please login with Google or GitHub' });
+    }
+
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
 
     const token = generateToken(user);
-    res.json({ token, user: { id: user._id, name: user.name, email: user.email } });
+    res.json({ token, user: { id: user._id, name: `${user.firstName} ${user.surname}`, email: user.email } });
   } catch (err) {
     res.status(500).json({ error: 'Server error during login' });
   }
 });
 
-// 3. Google OAuth
+// Google OAuth
 app.get('/api/auth/google', passport.authenticate('google', { scope: ['profile', 'email'] }));
 app.get('/api/auth/google/callback', 
   passport.authenticate('google', { session: false, failureRedirect: '/?error=google_auth_failed' }),
   (req, res) => {
     const token = generateToken(req.user);
-    res.redirect(`/?token=${token}&name=${encodeURIComponent(req.user.name)}`);
+    const fullName = `${req.user.firstName} ${req.user.surname || ''}`.trim();
+    res.redirect(`/?token=${token}&name=${encodeURIComponent(fullName)}`);
   }
 );
 
-// 4. GitHub OAuth
+// GitHub OAuth
 app.get('/api/auth/github', passport.authenticate('github', { scope: ['user:email'] }));
 app.get('/api/auth/github/callback', 
   passport.authenticate('github', { session: false, failureRedirect: '/?error=github_auth_failed' }),
   (req, res) => {
     const token = generateToken(req.user);
-    res.redirect(`/?token=${token}&name=${encodeURIComponent(req.user.name)}`);
+    const fullName = `${req.user.firstName} ${req.user.surname || ''}`.trim();
+    res.redirect(`/?token=${token}&name=${encodeURIComponent(fullName)}`);
   }
 );
 
-// --- MOCK LOAN ROUTES (For testing dashboard) ---
-
-app.get('/api/user/dashboard', async (req, res) => {
-  // In a real app, you'd use a JWT middleware here
-  const authHeader = req.headers.authorization;
-  if (!authHeader) return res.status(401).json({ error: 'Unauthorized' });
-  
-  const token = authHeader.split(' ')[1];
-  try {
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    const user = await User.findById(decoded.id).select('-password');
-    res.json(user);
-  } catch (err) {
-    res.status(401).json({ error: 'Invalid token' });
-  }
-});
-
-app.post('/api/loan/apply', async (req, res) => {
-  // Mock Payhero STK Push integration
-  const { amount, term, phone } = req.body;
-  
-  const upfrontFee = amount * 0.10; // 10% upfront fee
-  const interest = amount * 0.08;   // 8% interest
-  const totalRepayment = amount + interest;
-
-  // Here you would call Payhero API to initiate STK push for the upfrontFee
-  console.log(`Initiating M-Pesa STK Push for KES ${upfrontFee} to ${phone} via Payhero API`);
-  
-  res.json({ 
-    message: 'STK Push initiated', 
-    details: { amount, term, upfrontFee, interest, totalRepayment },
-    checkoutRequestID: 'mock_payhero_id_12345'
-  });
-});
-
-// Payhero Callback Webhook
-app.post('/api/payhero/callback', async (req, res) => {
-  console.log('Payhero Callback Received:', req.body);
-  // Logic to check if payment was successful, then update user wallet balance
-  // and disburse the loan.
-  res.status(200).send('OK');
-});
-
-// Serve frontend for any other route
+// Serve frontend
 app.get('*', (req, res) => {
   res.sendFile(path.join(__dirname, 'public', 'index.html'));
 });
