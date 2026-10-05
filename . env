@@ -1,5 +1,6 @@
 PORT=3000
 MONGO_URI=mongodb://localhost:27017/imarika_loans
+JWT_SECRET=super_secret_imarika_key_2026
 PAYHERO_AUTH_TOKEN=your_payhero_basic_auth_token_here
 PAYHERO_CHANNEL_ID=your_payhero_channel_id_here
 PAYHERO_CALLBACK_URL=https://yourdomain.com/api/payhero/callback
