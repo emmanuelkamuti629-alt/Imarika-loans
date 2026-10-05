@@ -27,17 +27,18 @@ mongoose.connect(MONGODB_URI)
   .then(() => console.log('MongoDB Connected Successfully'))
   .catch(err => {
     console.error('MongoDB Connection Error:', err);
-    process.exit(1); // Stop the server if DB fails to connect
+    process.exit(1); 
   });
 
 // User Schema
+// NOTICE: phoneNumber is NOT unique. Only email and username are unique.
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   middleName: { type: String },
   surname: { type: String, required: true },
   username: { type: String, required: true, unique: true },
   email: { type: String, required: true, unique: true },
-  phoneNumber: { type: String, required: true },
+  phoneNumber: { type: String, required: true }, 
   password: { type: String }, 
   googleId: { type: String },
   githubId: { type: String },
@@ -131,7 +132,8 @@ app.post('/api/auth/register', async (req, res) => {
       return res.status(400).json({ error: 'Please enter all required fields' });
     }
 
-    // Check for existing user
+    // Check for existing user by EMAIL or USERNAME only
+    // Multiple accounts can share the same phone number
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
       return res.status(400).json({ error: 'Email or Username already exists' });
@@ -150,14 +152,12 @@ app.post('/api/auth/register', async (req, res) => {
     res.status(201).json({ token, user: { id: newUser._id, name: `${firstName} ${surname}`, email: newUser.email } });
   
   } catch (err) {
-    // Log the EXACT error to Render logs
     console.error("=== REGISTRATION ERROR ===");
     console.error(err);
     console.error("==========================");
 
-    // Send specific error to frontend
+    // Handle duplicate key error (only email and username should trigger this now)
     if (err.code === 11000) {
-      // MongoDB duplicate key error
       const field = Object.keys(err.keyPattern)[0];
       return res.status(400).json({ error: `An account with that ${field} already exists.` });
     }
