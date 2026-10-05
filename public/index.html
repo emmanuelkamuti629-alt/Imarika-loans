@@ -15,7 +15,7 @@
 </head>
 <body class="bg-gray-100 flex justify-center items-center min-h-screen">
 
-  <!-- Mobile Mockup Container -->
+  <!-- Mobile Mockup Container (Frame only, no fake screenshot status bar) -->
   <div class="w-full max-w-md h-[850px] bg-white rounded-[35px] shadow-2xl overflow-hidden flex flex-col relative border-[8px] border-gray-800">
     
     <!-- ================= AUTH SCREEN ================= -->
@@ -105,7 +105,7 @@
           <div class="space-y-3">
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400 text-xs">👤</span>
-              <input type="text" id="signup-username" placeholder="Enter username" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
+              <input type="text" id="signup-name" placeholder="Enter full name (e.g. John Doe)" class="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:outline-none focus:border-[#10b981] text-sm">
             </div>
             <div class="relative">
               <span class="absolute left-3 top-3 text-gray-400 text-xs">✉️</span>
@@ -149,14 +149,7 @@
     <!-- ================= MAIN APP (DASHBOARD) ================= -->
     <div id="app-screen" class="absolute inset-0 z-40 hidden flex-col bg-[#0B2E20]">
       
-      <div class="flex justify-between items-center px-6 pt-3 pb-2 text-white text-xs font-semibold">
-        <span>9:41</span>
-        <div class="flex gap-1.5 items-center">
-          <span>📶</span> <span>📶</span> <span>🔋</span>
-        </div>
-      </div>
-
-      <div class="flex-1 overflow-y-auto no-scrollbar pb-20" id="app-content">
+      <div class="flex-1 overflow-y-auto no-scrollbar pb-20 pt-6" id="app-content">
         <!-- Dynamic content -->
       </div>
 
@@ -189,22 +182,21 @@
 
   <script>
     // --- State Management ---
-    // Completely reset state. No simulated data.
     let state = {
       currentTab: 'home',
       user: { 
-        username: 'User', 
+        name: '', 
         phone: '', 
-        limit: 2000, // Default limit for new users as requested
+        limit: 2000, 
         walletBalance: 0 
       },
-      activeLoan: null, // No active loan by default
-      transactions: [], // No transactions by default
+      activeLoan: null, 
+      transactions: [], 
       loanForm: { 
         amount: 2000, 
         term: 30, 
         purpose: 'Business',
-        paymentPhone: '' // Will be populated with user.phone on login
+        paymentPhone: '' 
       }
     };
 
@@ -245,19 +237,22 @@
         return;
       }
 
-      // In a real app, you would fetch the user data from the backend here.
-      // For this demo, we simulate a successful login and set user data.
+      // Simulate API Call. 
       setTimeout(() => {
-        // Mocking the retrieval of user data
-        state.user.username = email.split('@')[0]; // Use part of email as username
-        state.user.phone = '254712345678'; // Ideally, this comes from the DB
-        state.user.limit = 2000; // Default limit
-        state.user.walletBalance = 0;
+        // Retrieve the name saved during signup.
+        // If the user didn't sign up in this session, ask for their name.
+        let savedName = localStorage.getItem('imarika_user_name');
         
-        // Pre-fill payment phone with registered number
+        if (!savedName) {
+          savedName = prompt("Welcome back! Please enter your full name to continue:");
+          if (!savedName) savedName = "Valued User"; // Fallback
+          localStorage.setItem('imarika_user_name', savedName);
+        }
+
+        state.user.name = savedName;
+        state.user.phone = localStorage.getItem('imarika_user_phone') || '254712345678'; 
+        
         state.loanForm.paymentPhone = state.user.phone;
-        
-        // Clear any previous simulated data
         state.activeLoan = null;
         state.transactions = [];
 
@@ -269,13 +264,13 @@
     }
 
     function handleSignup() {
-      const username = document.getElementById('signup-username').value;
+      const name = document.getElementById('signup-name').value;
       const email = document.getElementById('signup-email').value;
       const phone = document.getElementById('signup-phone').value;
       const password = document.getElementById('signup-password').value;
       const confirm = document.getElementById('signup-confirm').value;
 
-      if (!username || !email || !phone || !password || !confirm) {
+      if (!name || !email || !phone || !password || !confirm) {
         alert('Please fill in all fields');
         return;
       }
@@ -284,17 +279,16 @@
         return;
       }
 
-      // In a real app, you would POST this data to your backend /api/auth/register
+      // Simulate API Call
       setTimeout(() => {
-        // Set state based on the new user's details
-        state.user.username = username;
-        state.user.phone = phone; // Store the registered phone number
-        state.user.limit = 2000; // Default limit for new users
-        state.user.walletBalance = 0;
+        state.user.name = name;
+        state.user.phone = phone;
         
-        // Pre-fill payment phone with registered number
+        // Save to localStorage so the Login page can retrieve it
+        localStorage.setItem('imarika_user_name', name);
+        localStorage.setItem('imarika_user_phone', phone);
+
         state.loanForm.paymentPhone = phone;
-        
         state.activeLoan = null;
         state.transactions = [];
 
@@ -332,8 +326,8 @@
     }
 
     function renderHome() {
-      // Dynamic greeting using actual username
-      const greeting = `Hello, ${state.user.username}`;
+      // Using the user's actual name from state
+      const greeting = `Hello, ${state.user.name}`;
       
       return `
         <div class="p-5 text-white">
@@ -345,14 +339,12 @@
             <div class="w-10 h-10 bg-gray-700 rounded-full flex items-center justify-center">🔔</div>
           </div>
 
-          <!-- Dynamic Loan Limit -->
           <div class="bg-[#1A4D33] rounded-2xl p-5 mb-5 border border-[#2A6D4A]">
             <p class="text-xs text-gray-300 mb-1">Available Loan Limit</p>
             <h1 class="text-3xl font-bold mb-4">${fmt(state.user.limit)}</h1>
             <button onclick="switchTab('loans')" class="bg-[#10b981] text-white text-sm font-semibold px-4 py-2 rounded-lg">Apply for Loan</button>
           </div>
 
-          <!-- Conditional Active Loan Rendering -->
           ${state.activeLoan ? `
           <div class="bg-[#1A4D33] rounded-2xl p-4 mb-5 border border-[#2A6D4A]">
             <div class="flex justify-between text-xs text-gray-300 mb-2">
@@ -401,7 +393,6 @@
             <button onclick="switchTab('transactions')" class="text-xs text-[#10b981]">View all</button>
           </div>
           
-          <!-- Conditional Transactions Rendering -->
           ${state.transactions.length > 0 ? state.transactions.slice(0,3).map(t => `
             <div class="flex justify-between items-center py-3 border-b border-[#2A6D4A] last:border-0">
               <div class="flex items-center gap-3">
@@ -460,7 +451,6 @@
               </div>
             </div>
             
-            <!-- M-Pesa Payment Number Input -->
             <div class="mb-6">
               <p class="text-xs text-gray-300 mb-2">M-Pesa Payment Number</p>
               <input type="tel" id="payment-phone" 
@@ -549,7 +539,7 @@
           <div class="flex items-center gap-4 mb-6">
             <div class="w-16 h-16 bg-[#1A4D33] rounded-full flex items-center justify-center text-2xl border-2 border-[#10b981]">👤</div>
             <div>
-              <h2 class="text-lg font-bold">${state.user.username}</h2>
+              <h2 class="text-lg font-bold">${state.user.name}</h2>
               <p class="text-xs text-gray-400">${state.user.phone || 'No phone set'}</p>
               <span class="text-[10px] bg-[#10b981]/20 text-[#10b981] px-2 py-0.5 rounded-full mt-1 inline-block">✅ Verified</span>
             </div>
@@ -600,7 +590,6 @@
       render();
     }
 
-    // New handler to update the payment phone number in state
     function updatePaymentPhone(val) {
       state.loanForm.paymentPhone = val;
     }
@@ -618,22 +607,18 @@
       btn.innerText = 'Processing...';
       btn.disabled = true;
       
-      // Simulate API call to backend
       setTimeout(() => {
         alert(`Loan Application Received!\n\nA Payhero STK Push for ${fmt(fee)} (10% upfront fee) has been sent to ${paymentPhone}.\n\nPlease enter your M-Pesa PIN to activate the loan.`);
-        
-        // After successful payment in a real app, you would update state.activeLoan and add a transaction.
-        // For now, we just reset the button.
         btn.innerText = 'Continue to Payment';
         btn.disabled = false;
       }, 1500);
     }
 
     function logout() {
-      // Reset state completely on logout
+      // Clear session state but keep the localStorage name so login works smoothly
       state = {
         currentTab: 'home',
-        user: { username: 'User', phone: '', limit: 2000, walletBalance: 0 },
+        user: { name: '', phone: '', limit: 2000, walletBalance: 0 },
         activeLoan: null,
         transactions: [],
         loanForm: { amount: 2000, term: 30, purpose: 'Business', paymentPhone: '' }
@@ -645,8 +630,7 @@
       showLogin();
     }
 
-    // Initialize with Login screen visible
     showLogin();
   </script>
 </body>
-</html>
+              </html>
