@@ -31,18 +31,17 @@ mongoose.connect(MONGODB_URI)
   });
 
 // User Schema
-// NOTICE: phoneNumber is NOT unique. Only email and username are unique.
 const userSchema = new mongoose.Schema({
   firstName: { type: String, required: true },
   middleName: { type: String },
   surname: { type: String, required: true },
-  username: { type: String, required: true, unique: true },
-  email: { type: String, required: true, unique: true },
-  phoneNumber: { type: String, required: true }, 
+  username: { type: String, required: true, unique: true }, // Unique
+  email: { type: String, required: true, unique: true },    // Unique
+  phoneNumber: { type: String, required: true },            // NOT unique
   password: { type: String }, 
   googleId: { type: String },
   githubId: { type: String },
-  mpesaNumber: { type: String },
+  mpesaNumber: { type: String },                            // NOT unique
   loanLimit: { type: Number, default: 2000 },
   walletBalance: { type: Number, default: 0 },
   activeLoan: {
@@ -127,23 +126,19 @@ app.post('/api/auth/register', async (req, res) => {
   try {
     const { firstName, middleName, surname, username, email, phoneNumber, password } = req.body;
     
-    // Basic validation
     if (!firstName || !surname || !username || !email || !phoneNumber || !password) {
       return res.status(400).json({ error: 'Please enter all required fields' });
     }
 
-    // Check for existing user by EMAIL or USERNAME only
-    // Multiple accounts can share the same phone number
+    // Check for existing user by EMAIL or USERNAME only (Phone number is ignored here)
     const existingUser = await User.findOne({ $or: [{ email }, { username }] });
     if (existingUser) {
-      return res.status(400).json({ error: 'Email or Username already exists' });
+      return res.status(400).json({ error: 'Email or Username already exists. Please login.' });
     }
 
-    // Hash password
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash(password, salt);
 
-    // Create user
     const newUser = await User.create({ 
       firstName, middleName, surname, username, email, phoneNumber, password: hashedPassword 
     });
@@ -154,19 +149,12 @@ app.post('/api/auth/register', async (req, res) => {
   } catch (err) {
     console.error("=== REGISTRATION ERROR ===");
     console.error(err);
-    console.error("==========================");
-
-    // Handle duplicate key error (only email and username should trigger this now)
+    
     if (err.code === 11000) {
       const field = Object.keys(err.keyPattern)[0];
       return res.status(400).json({ error: `An account with that ${field} already exists.` });
     }
     
-    if (err.name === 'ValidationError') {
-      const messages = Object.values(err.errors).map(val => val.message);
-      return res.status(400).json({ error: messages.join(', ') });
-    }
-
     res.status(500).json({ error: `Server Error: ${err.message}` });
   }
 });
@@ -176,14 +164,14 @@ app.post('/api/auth/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const user = await User.findOne({ email });
-    if (!user) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!user) return res.status(400).json({ error: 'Account not found. Please sign up.' });
 
     if (!user.password) {
-      return res.status(400).json({ error: 'Please login with Google or GitHub' });
+      return res.status(400).json({ error: 'This email is registered with Google or GitHub. Please use the social login buttons below.' });
     }
 
     const isMatch = await bcrypt.compare(password, user.password);
-    if (!isMatch) return res.status(400).json({ error: 'Invalid credentials' });
+    if (!isMatch) return res.status(400).json({ error: 'Incorrect password' });
 
     const token = generateToken(user);
     res.json({ token, user: { id: user._id, name: `${user.firstName} ${user.surname}`, email: user.email } });
